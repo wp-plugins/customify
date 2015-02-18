@@ -1,5 +1,5 @@
 === Customify - A Theme Customizer Booster ===
-Contributors: euthelup, babbardel
+Contributors: pixelgrade, euthelup, babbardel
 Tags: customizer, css, editor, live, preview, customise
 Requires at least: 3.8.0
 Tested up to: 4.1
