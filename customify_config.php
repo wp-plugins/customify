@@ -17,6 +17,136 @@ if ( ! function_exists('add_customify_base_options') ) {
 
 		$config['sections'] = array(
 			/**
+			 * Presets - This section will handle other options
+			 */
+			'presets_section' => array(
+				'title'    => __( 'Style Presets', 'customify_txtd' ),
+				'options' => array(
+					'theme_style'   => array(
+						'type'      => 'preset',
+						'label'     => __( 'Select a style:', 'customify_txtd' ),
+						'desc' => __( 'Conveniently change the design of your site with built-in style presets. Easy as pie.', 'customify_txtd' ),
+						'default'   => 'royal',
+						'choices_type' => 'awesome',
+						'choices'  => array(
+							'royal' => array(
+								'label' => __( 'Royal', 'customify_txtd' ),
+								'preview' => array(
+									'color-text' => '#ffffff',
+									'background-card' => '#615375',
+									'background-label' => '#46414c',
+									'font-main' => 'Abril Fatface',
+									'font-alt' => 'PT Serif',
+								),
+								'options' => array(
+									'links_color' => '#8eb2c5',
+									'headings_color' => '#725c92',
+									'body_color' => '#6f8089',
+									'page_background' => '#615375',
+									'headings_font' => 'Abril Fatface',
+									'body_font' => 'PT Serif',
+								)
+							),
+							'lovely' => array(
+								'label' => __( 'Lovely', 'customify_txtd' ),
+								'preview' => array(
+									'color-text' => '#ffffff',
+									'background-card' => '#d15c57',
+									'background-label' => '#5c374b',
+									'font-main' => 'Playfair Display',
+									'font-alt' => 'Playfair Display',
+								),
+								'options' => array(
+									'links_color' => '#cc3747',
+									'headings_color' => '#d15c57',
+									'body_color' => '#5c374b',
+									'page_background' => '#d15c57',
+									'headings_font' => 'Playfair Display',
+									'body_font' => 'Playfair Display',
+								)
+							),
+							'queen' => array(
+								'label' => __( 'Queen', 'customify_txtd' ),
+								'preview' => array(
+									'color-text' => '#fbedec',
+									'background-card' => '#773347',
+									'background-label' => '#41212a',
+									'font-main' => 'Cinzel Decorative',
+									'font-alt' => 'Gentium Basic',
+								),
+								'options' => array(
+									'links_color' => '#cd8085',
+									'headings_color' => '#54323c',
+									'body_color' => '#cd8085',
+									'page_background' => '#fff',
+									'headings_font' => 'Cinzel Decorative',
+									'body_font' => 'Gentium Basic',
+								)
+							),
+							'carrot' => array(
+								'label' => __( 'Carrot', 'customify_txtd' ),
+								'preview' => array(
+									'color-text' => '#ffffff',
+									'background-card' => '#df421d',
+									'background-label' => '#85210a',
+									'font-main' => 'Oswald',
+									'font-alt' => 'PT Sans Narrow',
+								),
+								'options' => array(
+									'links_color' => '#df421d',
+									'headings_color' => '#df421d',
+									'body_color' => '#7e7e7e',
+									'page_background' => '#fff',
+									'headings_font' => 'Oswald',
+									'body_font' => 'PT Sans Narrow',
+								)
+							),
+
+
+
+							'adler' => array(
+								'label' => __( 'Adler', 'customify_txtd' ),
+								'preview' => array(
+									'color-text' => '#fff',
+									'background-card' => '#0e364f',
+									'background-label' => '#000000',
+									'font-main' => 'Permanent Marker',
+									'font-alt' => 'Droid Sans Mono',
+								),
+								'options' => array(
+									'links_color' => '#68f3c8',
+									'headings_color' => '#0e364f',
+									'body_color' => '#45525a',
+									'page_background' => '#ffffff',
+									'headings_font' => 'Permanent Marker',
+									'body_font' => 'Droid Sans Mono'
+								)
+							),
+							'velvet' => array(
+								'label' => __( 'Velvet', 'customify_txtd' ),
+								'preview' => array(
+									'color-text' => '#ffffff',
+									'background-card' => '#282828',
+									'background-label' => '#000000',
+									'font-main' => 'Pinyon Script',
+									'font-alt' => 'Josefin Sans',
+								),
+								'options' => array(
+									'links_color' => '#000000',
+									'headings_color' => '#000000',
+									'body_color' => '#000000',
+									'page_background' => '#000000',
+									'headings_font' => 'Pinyon Script',
+									'body_font' => 'Josefin Sans',
+								)
+							),
+
+						)
+					),
+				)
+			),
+
+			/**
 			 * COLORS - This section will handle different elements colors (eg. links, headings)
 			 */
 			'colors_section' => array(
@@ -73,7 +203,7 @@ if ( ! function_exists('add_customify_base_options') ) {
 					'headings_font' => array(
 						'type'     => 'typography',
 						'label'    => __( 'Headings', 'customify_txtd' ),
-						'default'  => 'Playfair Display", serif',
+						'default'  => 'Playfair Display',
 						'selector' => '.site-title a, h1, h2, h3, h4, h5, h6,
 										h1 a, h2 a, h3 a, h4 a, h5 a, h6 a,
 										.widget-title',
@@ -104,7 +234,6 @@ if ( ! function_exists('add_customify_base_options') ) {
 					'body_font'     => array(
 						'type'    => 'typography',
 						'label'   => __( 'Body Text', 'customify_txtd' ),
-						'default' => 'Lato',
 						'default' => 'Lato',
 						'selector' => 'html body',
 						'load_all_weights' => true,
@@ -191,29 +320,29 @@ if ( ! function_exists('add_customify_base_options') ) {
 		);
 
 		/**
-		 * A self explanatory example of panels
-		$config['panels'] = array(
-			'panel_id' => array(
-				'title'    => __( 'Panel Title', 'customify_txtd' ),
-				'sections' => array(
-					'title'    => __( 'Section Title', 'customify_txtd' ),
-					'options' => array(
-						'setting_id'   => array(
-							'type'      => 'color',
-							'label'     => __( 'Label', 'customify_txtd' ),
-							'live' => true, // or false
-							'default'   => '#6c6e70',
-							'css'  => array(
-								array(
-									'property'     => 'color',
-									'selector' => 'a, .entry-meta a',
-								),
-							)
-						),
-					)
-				)
-			)
-		);
+		 * A self explanatory example of panels *
+		//$config['panels'] = array(
+		//	'panel_id' => array(
+		//		'title'    => __( 'Panel Title', 'customify_txtd' ),
+		//		'sections' => array(
+		//			'title'    => __( 'Section Title', 'customify_txtd' ),
+		//			'options' => array(
+		//				'setting_id'   => array(
+		//					'type'      => 'color',
+		//					'label'     => __( 'Label', 'customify_txtd' ),
+		//					'live' => true, // or false
+		//					'default'   => '#6c6e70',
+		//					'css'  => array(
+		//						array(
+		//							'property'     => 'color',
+		//							'selector' => 'a, .entry-meta a',
+		//						),
+		//					)
+		//				),
+		//			)
+		//		)
+		//	)
+		//);
 		 *
 		 **/
 
@@ -222,4 +351,4 @@ if ( ! function_exists('add_customify_base_options') ) {
 }
 
 
-add_filter( 'customify_filter_fields', 'add_customify_base_options', 10, 1 );
+add_filter( 'customify_filter_fields', 'add_customify_base_options' );
