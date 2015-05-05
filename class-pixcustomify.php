@@ -20,7 +20,7 @@ class PixCustomifyPlugin {
 	 * @since   1.0.0
 	 * @const   string
 	 */
-	protected $version = '1.0.0';
+	protected $version = '1.1.1';
 	/**
 	 * Unique identifier for your plugin.
 	 * Use this value (not the variable name) as the text domain when internationalizing strings of text. It should
@@ -109,7 +109,9 @@ class PixCustomifyPlugin {
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue_admin_customizer_scripts' ), 10 );
 		add_action( 'customize_preview_init', array( $this, 'customizer_live_preview_enqueue_scripts' ), 99999 );
 
-		add_action( 'wp_footer', array( $this, 'output_dynamic_style' ), 99999 );
+		$load_location = self::get_plugin_option('style_resources_location', 'wp_head');
+
+		add_action( $load_location, array( $this, 'output_dynamic_style' ), 99999 );
 		add_action( 'wp_head', array( $this, 'output_typography_dynamic_style' ), 10 );
 
 		// add things to the previewer
@@ -646,7 +648,7 @@ class PixCustomifyPlugin {
 
 		$this_value = self::get_option( $option_id );
 
-		if ( empty( $css_config ) || empty( $this_value ) ) {
+		if ( empty( $css_config ) ) {
 			return $output;
 		}
 
@@ -674,7 +676,6 @@ class PixCustomifyPlugin {
 		if ( isset( $css_property['unit'] ) ) {
 			$unit = $css_property['unit'];
 		}
-
 		$this_property_output = $css_property['selector'] . ' { ' . $css_property['property'] . ': ' . $this_value . $unit . "; } \n";
 
 
@@ -823,6 +824,10 @@ class PixCustomifyPlugin {
 
 	protected function register_section( $panel_id, $section_key, $options_name, $section_settings, $wp_customize ) {
 
+		if ( isset( self::$plugin_settings['disable_customify_sections'] ) && isset( self::$plugin_settings['disable_customify_sections'][$section_key] ) ) {
+			return;
+		}
+
 		$section_args = array(
 			'priority'   => 10,
 			'capability' => 'edit_theme_options',
@@ -955,6 +960,11 @@ class PixCustomifyPlugin {
 				$control_class_name = 'WP_Customize_Color_Control';//'Pix_Customize_' . ucfirst( $setting_config['type'] ) . '_Control';
 				break;
 
+			case 'color_drop':
+
+				$control_class_name = 'Pix_Customize_Color_Drop_Control';//'Pix_Customize_' . ucfirst( $setting_config['type'] ) . '_Control';
+				break;
+
 			case 'upload':
 
 				$control_class_name = 'WP_Customize_Upload_Control';//'Pix_Customize_' . ucfirst( $setting_config['type'] ) . '_Control';
@@ -1011,6 +1021,26 @@ class PixCustomifyPlugin {
 				break;
 
 			case 'preset' :
+
+				if ( ! isset( $setting_config['choices'] ) || empty( $setting_config['choices'] ) ) {
+					return;
+				}
+
+				$control_args['choices'] = $setting_config['choices'];
+
+				if ( isset( $setting_config['choices_type'] ) || ! empty( $setting_config['choices_type'] ) ) {
+					$control_args['choices_type'] = $setting_config['choices_type'];
+				}
+
+				if ( isset( $setting_config['desc'] ) || ! empty( $setting_config['desc'] ) ) {
+					$control_args['description'] = $setting_config['desc'];
+				}
+
+
+				$control_class_name = 'Pix_Customize_' . ucfirst( $setting_config['type'] ) . '_Control';
+				break;
+
+			case 'radio_image' :
 
 				if ( ! isset( $setting_config['choices'] ) || empty( $setting_config['choices'] ) ) {
 					return;
