@@ -146,6 +146,7 @@ Fields  | [Live Preview Support!](#live_preview_support) | Description
 ------------- | ------------- | -------------
 Text  | No | A simple text input
 Textarea | No | A simple text area input
+Ace Editor | No | An ace editor that supports plain_text / css / html / javascript / json / markdown
 Color | Yes | A simple color picker
 Range | Yes | The default html5 range input
 Typography | No | This is an awesome font selector, it supports standard fonts and google fonts. You can also Group fonts or offer a list of recommended fonts
@@ -158,6 +159,7 @@ Date | No |
 Pages select | No | The standard WordPress Page Select
 [Select2](https://select2.github.io/) | No | An awesome select 
 [Presets](#presets_title) | No | An radio input option to select a group of options (inception style ^^)
+HTML field | No | A field which allows you to add custom HTML in customizer and hook into it with javascript later ;) 
 
 ### Live Preview Support<a name="live_preview_support"></a>
 

@@ -20,7 +20,7 @@ class PixCustomifyPlugin {
 	 * @since   1.0.0
 	 * @const   string
 	 */
-	protected $version = '1.1.2';
+	protected $version = '1.1.4';
 	/**
 	 * Unique identifier for your plugin.
 	 * Use this value (not the variable name) as the text domain when internationalizing strings of text. It should
@@ -746,7 +746,7 @@ class PixCustomifyPlugin {
 					var append_style_to_iframe = function( ifrm_id, styleElment ) {
 						var ifrm = window.frames[ ifrm_id ];
 						ifrm = ( ifrm.contentDocument || ifrm.contentDocument || ifrm.document );
-						var head = ifrm.getElementsByTagName('head')[0]; console.log( styleElment );
+						var head = ifrm.getElementsByTagName('head')[0];
 						head.appendChild( styleElment );
 					};
 
@@ -1010,6 +1010,22 @@ class PixCustomifyPlugin {
 			$setting_args['type'] = 'option';
 		}
 
+		// if we arrive here this means we have a custom field control
+		switch ( $setting_config['type'] ) {
+
+			case 'checkbox':
+
+				$setting_args['sanitize_callback'] = array( $this, 'setting_sanitize_checkbox');
+				break;
+
+			default:
+				break;
+		}
+
+		if ( isset( $setting_config['sanitize_callback'] ) && ! empty( $setting_config['sanitize_callback'] ) && function_exists( $setting_config['sanitize_callback'] ) ) {
+			$setting_args['sanitize_callback'] = $setting_config['sanitize_callback'];
+		}
+
 		// and add it
 		$wp_customize->add_setting( $setting_id, $setting_args );
 
@@ -1072,6 +1088,15 @@ class PixCustomifyPlugin {
 			case 'color_drop':
 
 				$control_class_name = 'Pix_Customize_Color_Drop_Control';//'Pix_Customize_' . ucfirst( $setting_config['type'] ) . '_Control';
+				break;
+
+			case 'ace_editor':
+
+				if ( isset( $setting_config['editor_type'] ) ) {
+					$control_args['editor_type'] = $setting_config['editor_type'];
+				}
+
+				$control_class_name = 'Pix_Customize_Ace_Editor_Control';//'Pix_Customize_' . ucfirst( $setting_config['type'] ) . '_Control';
 				break;
 
 			case 'upload':
@@ -1181,6 +1206,15 @@ class PixCustomifyPlugin {
 
 				break;
 
+			case 'html' :
+
+				if ( isset( $setting_config['html'] ) || ! empty( $setting_config['html'] ) ) {
+					$control_args['html'] = $setting_config['html'];
+				}
+
+				$control_class_name = 'Pix_Customize_HTML_Control';
+				break;
+
 			default:
 				// if we don't have a real control just quit, it doesn't even matter
 				return;
@@ -1239,6 +1273,24 @@ class PixCustomifyPlugin {
 
 		foreach ( $array as $i => $subarray ) {
 			self::get_typography_fields( $subarray, $key, $value, $results, $i );
+		}
+	}
+
+	/**
+	 * Sanitize functions
+	 */
+
+	/**
+	 * Sanitize the checkbox.
+	 *
+	 * @param boolean $input.
+	 * @return boolean true if is 1 or '1', false if anything else
+	 */
+	function setting_sanitize_checkbox( $input ) {
+		if ( 1 == $input ) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 }
