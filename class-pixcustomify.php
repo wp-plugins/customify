@@ -20,7 +20,7 @@ class PixCustomifyPlugin {
 	 * @since   1.0.0
 	 * @const   string
 	 */
-	protected $version = '1.1.4';
+	protected $version = '1.1.5';
 	/**
 	 * Unique identifier for your plugin.
 	 * Use this value (not the variable name) as the text domain when internationalizing strings of text. It should
@@ -73,6 +73,46 @@ class PixCustomifyPlugin {
 
 	protected static $typo_settings;
 
+	protected static $google_fonts = null;
+
+	// these properties will get 'px' as a default unit
+	protected static $pixel_dependent_css_properties = array(
+		'width',
+		'max-width',
+		'min-width',
+
+		'height',
+		'max-height',
+		'min-height',
+
+		'padding',
+		'padding-left',
+		'padding-right',
+		'padding-top',
+		'padding-bottom',
+
+		'margin',
+		'margin-right',
+		'margin-left',
+		'margin-top',
+		'margin-bottom',
+
+		'right',
+		'left',
+		'top',
+		'bottom',
+
+		'font-size',
+		'letter-spacing',
+
+		'border-size',
+		'border-width',
+		'border-bottom-width',
+		'border-left-width',
+		'border-right-width',
+		'border-top-width'
+	);
+
 	/**
 	 * Initialize the plugin by setting localization, filters, and administration functions.
 	 * @since     1.0.0
@@ -102,7 +142,7 @@ class PixCustomifyPlugin {
 
 		// Load public-facing style sheet and JavaScript.
 //		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ), 99999999999 );
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+//		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
 //		add_action( 'plugins_loaded', array( $this, 'register_metaboxes' ), 14 );
 		add_action( 'customize_controls_enqueue_scripts', array( $this, 'enqueue_admin_customizer_styles' ), 10 );
@@ -121,7 +161,7 @@ class PixCustomifyPlugin {
 		add_action( 'customize_register', array( $this, 'register_customizer' ), 12 );
 
 		if ( self::get_plugin_option( 'enable_editor_style', true ) ) {
-			add_action('admin_head', array( $this, 'add_customizer_settings_into_wp_editor' ) , 9999999);
+			add_action('admin_head', array( $this, 'add_customizer_settings_into_wp_editor' ) );
 		}
 
 		/**
@@ -162,7 +202,7 @@ class PixCustomifyPlugin {
 			self::$customizer_config = array();
 		}
 
-		// alllow themes or other plugins to filter the config
+		// allow themes or other plugins to filter the config
 		self::$customizer_config = apply_filters( 'customify_filter_fields', self::$customizer_config );
 
 		self::$opt_name = self::$localized['options_name'] = self::$customizer_config['opt-name'];
@@ -379,8 +419,10 @@ class PixCustomifyPlugin {
 			$this->plugin_slug . 'cssUpdate'
 		), $this->version, true );
 
-		wp_localize_script( $this->plugin_slug . '-previewer-scripts', 'customify_settings', self::$localized );
+		// when a live preview field is in action we need to know which props need 'px' as defaults
+		self::$localized['px_dependent_css_props'] = self::$pixel_dependent_css_properties;
 
+		wp_localize_script( $this->plugin_slug . '-previewer-scripts', 'customify_settings', self::$localized );
 	}
 
 	/**
@@ -497,8 +539,7 @@ class PixCustomifyPlugin {
 				continue;
 			}
 			$this_value = self::get_option( $option_id );
-			foreach ( $options['css'] as $key => $properties_set ) {
-				?>
+			foreach ( $options['css'] as $key => $properties_set ) { ?>
 				<style id="dynamic_setting_<?php echo $option_id . '_property_' . str_replace( '-', '_', $properties_set['property'] ); ?>" type="text/css"><?php
 
 					if ( isset( $properties_set['media'] ) && ! empty( $properties_set['media'] ) ) {
@@ -535,7 +576,6 @@ class PixCustomifyPlugin {
 
 					$display = true;?>
 					<style id="dynamic_setting_<?php echo $key; ?>" type="text/css"><?php
-
 						$property_settings = $property['property'];
 						$property_value    = $property['value'];
 						$media_q .= "\t" . self::proccess_css_property( $property_settings, $property_value );?>
@@ -552,6 +592,21 @@ class PixCustomifyPlugin {
 		}
 	}
 
+	protected function load_google_fonts() {
+
+		$fonts_path = plugin_dir_path( __FILE__ ) . 'features/customizer/controls/resources/google.fonts.php';
+
+		if ( file_exists( $fonts_path ) ) {
+			self::$google_fonts = require( $fonts_path );
+		}
+
+		if ( !empty( self::$google_fonts ) ) {
+			return self::$google_fonts;
+		}
+
+		return false;
+	}
+
 	function output_typography_dynamic_style() {
 
 		self::get_typography_fields( self::$options_list, 'type', 'typography', self::$typo_settings );
@@ -562,16 +617,21 @@ class PixCustomifyPlugin {
 
 		$families = '';
 
-		foreach ( self::$typo_settings as $id => $typo ) {
-			if ( isset ( $typo['value'] ) ) {
+		foreach ( self::$typo_settings as $id => $font ) {
+			if ( isset ( $font['value'] ) ) {
 
 				$load_all_weights = false;
 
-				if ( isset( $typo['load_all_weights'] ) && $typo['load_all_weights'] == 'true' ) {
+				if ( isset( $font['load_all_weights'] ) && $font['load_all_weights'] == 'true' ) {
 					$load_all_weights = true;
 				}
 
-				$value = json_decode( $typo['value'], true );
+				$value = json_decode( $font['value'], true );
+
+				// in case the value is still null, try default value(mostly for google fonts)
+				if ( $value === null ) {
+					$value = $this->get_font_defaults_value( $font['value'] );
+				}
 
 				if ( isset( $value['font_family'] ) && isset( $value['type'] ) && $value['type'] == 'google' ) {
 					$families .= "'" . $value['font_family'];
@@ -581,13 +641,13 @@ class PixCustomifyPlugin {
 					} elseif ( isset( $value['selected_variants'] ) && ! empty( $value['selected_variants'] ) ) {
 						$families .= ":" . implode( ',', $value['selected_variants'] );
 					} elseif ( isset( $value['variants'] ) && ! empty( $value['variants'] ) ) {
-						$families .= ":" . implode( ',', $value['variants'][0] );
+						$families .= ":" . implode( ',', $value['variants'] );
 					}
 
 					if ( isset( $value['selected_subsets'] ) && ! empty( $value['selected_subsets'] ) ) {
 						$families .= ":" . implode( ',', $value['selected_subsets'] );
 					} elseif ( isset( $value['subsets'] ) && ! empty( $value['subsets'] ) ) {
-						$families .= ":" . implode( ',', $value['subsets'][0] );
+						$families .= ":" . implode( ',', $value['subsets'] );
 					}
 
 					$families .= '\',';
@@ -632,36 +692,63 @@ class PixCustomifyPlugin {
 
 				if ( isset( $font['selector'] ) && isset( $font['value'] ) && ! empty( $font['value'] ) ) {
 
-					$value = json_decode( $font['value'], true );
+				$value = json_decode( $font['value'], true );
 
-					if ( isset( $value['font_family'] ) ) {
-						echo $font['selector'] . " {\n font-family: " . $value['font_family'] . ";\n}\n";
+				// in case the value is still null, try default value(mostly for google fonts)
+				if ( $value === null ) {
+					$value = $this->get_font_defaults_value( $font['value'] );
+				}
+
+				if ( isset( $value['font_family'] ) ) {
+					echo $font['selector'] . " {\n font-family: " . $value['font_family'] . ";\n}\n";
+				}
+
+				if ( isset( $value['selected_variants'] ) && ! $load_all_weights ) {
+					$the_weight = $value['selected_variants'][0];
+					$italic_font = false;
+
+					if ( strpos( $the_weight, 'italic' ) !== false ) {
+						$the_weight = str_replace( 'italic', '', $the_weight);
+						$italic_font = true;
 					}
 
-					if ( isset( $value['selected_variants'] ) && ! $load_all_weights ) {
-						$the_weight = $value['selected_variants'][0];
-						$italic_font = false;
-
-						if ( strpos( $the_weight, 'italic' ) !== false ) {
-							$the_weight = str_replace( 'italic', '', $the_weight);
-							$italic_font = true;
+					if ( ! empty( $the_weight ) ) {
+						if($the_weight === 'regular') {
+							$the_weight = 'normal';
 						}
-
-						if ( ! empty( $the_weight ) ) {
-							if($the_weight === 'regular') {
-								$the_weight = 'normal';
-							}
-							echo $font['selector'] . " {\nfont-weight: " . $the_weight . ";\n}\n";
-						}
-
-						if ( $italic_font ) {
-							echo $font['selector'] . " {\nfont-style: italic;\n}\n";
-						}
+						echo $font['selector'] . " {\nfont-weight: " . $the_weight . ";\n}\n";
 					}
+
+					if ( $italic_font ) {
+						echo $font['selector'] . " {\nfont-style: italic;\n}\n";
+					}
+				}
 				}
 			} ?>
 		</style>
 	<?php }
+
+	/**
+	 *
+	 * @param $font_name
+	 *
+	 * @return null
+	 */
+	protected function get_font_defaults_value( $font_name ) {
+
+		if ( empty( self::$google_fonts ) ) {
+			$this->load_google_fonts();
+		}
+
+		if ( isset( self::$google_fonts[ $font_name ] ) ) {
+			$value = self::$google_fonts[ $font_name ];
+			$value['font_family'] = $font_name;
+			$value['type'] = 'google';
+			return $value;
+		}
+
+		return null;
+	}
 
 	/**
 	 * Turn css options into a valid CSS output
@@ -703,8 +790,13 @@ class PixCustomifyPlugin {
 		if ( isset( $css_property['unit'] ) ) {
 			$unit = $css_property['unit'];
 		}
-		$this_property_output = $css_property['selector'] . ' { ' . $css_property['property'] . ': ' . $this_value . $unit . "; } \n";
 
+		// if the unit isn't specified but the property should have a unit force 'px' as it
+		if ( empty( $unit ) && in_array( $css_property['property'], self::$pixel_dependent_css_properties ) ) {
+			$unit = 'px';
+		}
+
+		$this_property_output = $css_property['selector'] . ' { ' . $css_property['property'] . ': ' . $this_value . $unit . "; } \n";
 
 		if ( isset( $css_property['callback_filter'] ) && function_exists( $css_property['callback_filter'] ) ) {
 			$this_property_output = call_user_func( $css_property['callback_filter'], $this_value, $css_property['selector'], $css_property['property'], $unit );
@@ -747,27 +839,36 @@ class PixCustomifyPlugin {
 						var ifrm = window.frames[ ifrm_id ];
 						ifrm = ( ifrm.contentDocument || ifrm.contentDocument || ifrm.document );
 						var head = ifrm.getElementsByTagName('head')[0];
-						head.appendChild( styleElment );
+
+						if ( typeof styleElment !== "undefined" ){
+							head.appendChild( styleElment );
+						}
 					};
 
-					// Create style element if needed
-					var styleElement = document.getElementById('mies_editor_style');
+					var xmlString = <?php echo json_encode( str_replace("\n", "", $custom_css ) ); ?>,
+						parser = new DOMParser(),
+						doc = parser.parseFromString( xmlString, "text/html" );
 
-					if (!styleElement) {
+					if ( typeof window.frames['content_ifr'] !== 'undefined' ) {
 
-						var xmlString = <?php echo json_encode( str_replace("\n", "", $custom_css ) ); ?>
-							, parser = new DOMParser()
-							, doc = parser.parseFromString(xmlString, "text/html");
+						$.each( doc.head.childNodes, function( key, el ){
 
-						if ( typeof window.frames['content_ifr'] !== 'undefined' ) {
-							append_script_to_iframe( 'content_ifr',doc.head.childNodes[0] );
+							if ( typeof el !== "undefined" && typeof el.tagName !== "undefined" ) {
 
-							// doc.head.childNodes[2] is the typography style#customify_typography_output_style
-							append_style_to_iframe( 'content_ifr',doc.head.childNodes[2] );
-							//doc.head.childNodes[3] is the customify dynamic style #customify_output_style
-							append_style_to_iframe( 'content_ifr',doc.head.childNodes[3] );
+								switch ( el.tagName ) {
 
-						}
+									case 'STYLE' :
+										append_style_to_iframe( 'content_ifr', el );
+										break;
+
+									case 'SCRIPT' :
+										append_script_to_iframe( 'content_ifr', el );
+										break;
+									default:
+										break;
+								}
+							}
+						});
 					}
 				});
 			})(jQuery);
@@ -1051,8 +1152,6 @@ class PixCustomifyPlugin {
 
 		// if is a standard wp field type call it here and skip the rest
 		if ( in_array( $setting_config['type'], array(
-			'text',
-			'textarea',
 			'checkbox',
 			'dropdown-pages',
 			'url',
@@ -1080,33 +1179,55 @@ class PixCustomifyPlugin {
 		// if we arrive here this means we have a custom field control
 		switch ( $setting_config['type'] ) {
 
+			case 'text':
+
+				if ( isset( $setting_config['live'] ) ) {
+					$control_args['live'] = $setting_config['live'];
+				}
+
+				$control_class_name = 'Pix_Customize_Text_Control';
+				break;
+
+			case 'textarea':
+
+				if ( isset( $setting_config['live'] ) ) {
+					$control_args['live'] = $setting_config['live'];
+				}
+
+				$control_class_name = 'Pix_Customize_Textarea_Control';
+				break;
+
 			case 'color':
 
-				$control_class_name = 'WP_Customize_Color_Control';//'Pix_Customize_' . ucfirst( $setting_config['type'] ) . '_Control';
+				$control_class_name = 'WP_Customize_Color_Control';
 				break;
 
 			case 'color_drop':
 
-				$control_class_name = 'Pix_Customize_Color_Drop_Control';//'Pix_Customize_' . ucfirst( $setting_config['type'] ) . '_Control';
+				$control_class_name = 'Pix_Customize_Color_Drop_Control';
 				break;
 
 			case 'ace_editor':
+
+				if ( isset( $setting_config['live'] ) ) {
+					$control_args['live'] = $setting_config['live'];
+				}
 
 				if ( isset( $setting_config['editor_type'] ) ) {
 					$control_args['editor_type'] = $setting_config['editor_type'];
 				}
 
-				$control_class_name = 'Pix_Customize_Ace_Editor_Control';//'Pix_Customize_' . ucfirst( $setting_config['type'] ) . '_Control';
+				$control_class_name = 'Pix_Customize_Ace_Editor_Control';
 				break;
 
 			case 'upload':
 
-				$control_class_name = 'WP_Customize_Upload_Control';//'Pix_Customize_' . ucfirst( $setting_config['type'] ) . '_Control';
+				$control_class_name = 'WP_Customize_Upload_Control';
 				break;
 
 			case 'image':
 
-				$control_class_name = 'WP_Customize_Image_Control';//'Pix_Customize_' . ucfirst( $setting_config['type'] ) . '_Control';
+				$control_class_name = 'WP_Customize_Image_Control';
 				break;
 
 			// Custom types

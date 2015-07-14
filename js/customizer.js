@@ -7,11 +7,10 @@
 
 			// add ace editors
 			$('.customify_ace_editor' ).each(function( key, el){
-				var id = $(this ).attr('id' ),
+				var id = $( this ).attr('id' ),
 					css_editor = ace.edit( id );
 
 				var editor_type = $( this ).data('editor_type');
-
 				// init the ace editor
 				css_editor.setTheme("ace/theme/github");
 				css_editor.getSession().setMode("ace/mode/" + editor_type);
@@ -226,9 +225,9 @@
 
 			// presets
 			$( document ).on( 'change', '.customify_preset.select', function() {
-				var api = wp.customize;
-				var this_option = $( this ).children( '[value="' + $( this ).val() + '"]' );
-				var data = $( this_option ).data( 'options' );
+				var api = wp.customize,
+					this_option = $( this ).children( '[value="' + $( this ).val() + '"]' ),
+					data = $( this_option ).data( 'options' );
 
 				if ( typeof data !== 'undefined' ) {
 					$.each( data, function( id, value ) {
